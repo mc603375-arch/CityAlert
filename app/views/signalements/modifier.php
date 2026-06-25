@@ -1,95 +1,57 @@
-<?php require_once __DIR__ . '/../layout/header.php'; ?>
-<?php require_once __DIR__ . '/../layout/navbar.php'; ?>
+<?php $pageTitle = "Modifier — CityAlert"; ?>
+<?php require_once VIEW_PATH . '/layout/header.php'; ?>
+<?php require_once VIEW_PATH . '/layout/navbar.php'; ?>
 
-<div class="container mt-4">
+<div class="container">
+    <div class="page-header">
+        <h1>✏️ Modifier le signalement</h1>
+        <a href="<?= BASE_URL ?>/signalements/detail?id=<?= $signalement['id'] ?>" class="btn btn-outline">← Retour</a>
+    </div>
 
-    <h1>Modifier le signalement</h1>
+    <?php if (!empty($erreur)): ?>
+        <div class="alert alert-danger">⚠️ <?= $erreur ?></div>
+    <?php endif; ?>
 
-    <form action="index.php?controller=signalement&action=update&id=<?= htmlspecialchars($signalement['id'] ?? '') ?>"
-          method="POST"
-          enctype="multipart/form-data">
-
-        <div class="mb-3">
-            <label for="titre" class="form-label">Titre</label>
-            <input type="text"
-                   name="titre"
-                   id="titre"
-                   class="form-control"
-                   value="<?= htmlspecialchars($signalement['titre'] ?? '') ?>"
-                   required>
-        </div>
-
-        <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea name="description"
-                      id="description"
-                      class="form-control"
-                      rows="5"
-                      required><?= htmlspecialchars($signalement['description'] ?? '') ?></textarea>
-        </div>
-
-        <div class="mb-3">
-            <label for="adresse" class="form-label">Adresse</label>
-            <input type="text"
-                   name="adresse"
-                   id="adresse"
-                   class="form-control"
-                   value="<?= htmlspecialchars($signalement['adresse'] ?? '') ?>"
-                   required>
-        </div>
-
-        <div class="mb-3">
-            <label for="categorie_id" class="form-label">Catégorie</label>
-            <select name="categorie_id" id="categorie_id" class="form-select" required>
-                <?php if (!empty($categories)): ?>
-                    <?php foreach ($categories as $categorie): ?>
-                        <option value="<?= htmlspecialchars($categorie['id']) ?>"
-                            <?= isset($signalement['categorie_id']) && $signalement['categorie_id'] == $categorie['id'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($categorie['libelle']) ?>
+    <div class="form-card">
+        <form method="POST" action="<?= BASE_URL ?>/signalements/modifier?id=<?= $signalement['id'] ?>" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="titre">Titre *</label>
+                <input type="text" id="titre" name="titre" value="<?= htmlspecialchars($signalement['titre']) ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description *</label>
+                <textarea id="description" name="description" rows="4" required><?= htmlspecialchars($signalement['description']) ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="adresse">Adresse *</label>
+                <input type="text" id="adresse" name="adresse" value="<?= htmlspecialchars($signalement['adresse']) ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="categorie_id">Catégorie *</label>
+                <select id="categorie_id" name="categorie_id" required>
+                    <?php foreach ($categories as $cat): ?>
+                        <option value="<?= $cat['id'] ?>" <?= $cat['id'] == $signalement['categorie_id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($cat['libelle']) ?>
                         </option>
                     <?php endforeach; ?>
-                <?php endif; ?>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label for="priorite" class="form-label">Priorité</label>
-            <select name="priorite" id="priorite" class="form-select" required>
-                <?php
-                $priorites = ['basse', 'normale', 'haute', 'urgente'];
-                foreach ($priorites as $priorite):
-                ?>
-                    <option value="<?= $priorite ?>"
-                        <?= isset($signalement['priorite']) && $signalement['priorite'] === $priorite ? 'selected' : '' ?>>
-                        <?= ucfirst($priorite) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <?php if (!empty($signalement['photo'])): ?>
-            <div class="mb-3">
-                <p><strong>Photo actuelle :</strong></p>
-                <img src="public/uploads/<?= htmlspecialchars($signalement['photo']) ?>"
-                     alt="Photo actuelle"
-                     class="img-fluid rounded"
-                     style="max-width: 300px;">
+                </select>
             </div>
-        <?php endif; ?>
-
-        <div class="mb-3">
-            <label for="photo" class="form-label">Changer la photo</label>
-            <input type="file" name="photo" id="photo" class="form-control" accept="image/*">
-        </div>
-
-        <button type="submit" class="btn btn-warning">Mettre à jour</button>
-
-        <a href="index.php?controller=signalement&action=liste" class="btn btn-secondary">
-            Annuler
-        </a>
-
-    </form>
-
+            <?php if (!empty($signalement['photo'])): ?>
+                <div class="form-group">
+                    <label>Photo actuelle</label>
+                    <img src="<?= UPLOAD_URL . '/' . htmlspecialchars($signalement['photo']) ?>" alt="Photo" class="img-preview">
+                </div>
+            <?php endif; ?>
+            <div class="form-group">
+                <label for="photo">Changer la photo</label>
+                <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-warning">Mettre à jour</button>
+                <a href="<?= BASE_URL ?>/signalements/detail?id=<?= $signalement['id'] ?>" class="btn btn-outline">Annuler</a>
+            </div>
+        </form>
+    </div>
 </div>
 
-<?php require_once __DIR__ . '/../layout/footer.php'; ?>
+<?php require_once VIEW_PATH . '/layout/footer.php'; ?>

@@ -1,26 +1,15 @@
 <?php
-
 require_once __DIR__ . '/Categorie.php';
 
 class EauAssainissement extends Categorie
 {
-    public function __construct()
+    public function getComportementSpecifique(): string
     {
-        parent::__construct('Eau et assainissement', 'urgente', 2);
+        return "Traitement {->libelle} — délai : {->delaiJours} jours, priorité : {->priorite}.";
     }
 
-    public function getPriorite(): string
+    public function getMessageCreation(): string
     {
-        return 'urgente';
-    }
-
-    public function getDelaiTraitement(): int
-    {
-        return 2; // 2 jours
-    }
-
-    public function getDescription(): string
-    {
-        return "Problèmes liés à l'eau potable, fuites et assainissement.";
+        return "✅ Signalement enregistré dans la catégorie {->libelle}. Délai d'intervention : {->delaiJours} jours.";
     }
 }

@@ -1,50 +1,25 @@
 <?php
-
-require_once __DIR__ . '/../../config/Database.php';
+require_once ROOT_PATH . '/app/models/repositories/CommentaireRepository.php';
 
 class CommentaireController
 {
-    private $db;
-
-    public function __construct()
+    public function ajouter(): void
     {
-        $database = new Database();
-        $this->db = $database->getConnection();
-    }
+        if (!isset($_SESSION['user'])) { header('Location: ' . BASE_URL . '/login'); exit; }
 
-    public function ajouter()
-    {
-        if (!isset($_SESSION['user'])) {
-            header('Location: index.php?controller=auth&action=login');
-            exit;
+        $contenu       = trim($_POST['contenu']        ?? '');
+        $signalementId = (int)($_POST['signalement_id'] ?? 0);
+
+        if (empty($contenu) || $signalementId <= 0) {
+            header('Location: ' . BASE_URL . '/signalements/detail?id=' . $signalementId); exit;
         }
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: index.php?controller=signalement&action=liste');
-            exit;
-        }
-
-        $contenu = trim($_POST['contenu'] ?? '');
-        $signalementId = (int) ($_POST['signalement_id'] ?? 0);
-        $userId = (int) $_SESSION['user']['id'];
-
-        if ($contenu === '' || $signalementId <= 0) {
-            header('Location: index.php?controller=signalement&action=detail&id=' . $signalementId);
-            exit;
-        }
-
-        $sql = "INSERT INTO commentaires (contenu, signalement_id, user_id)
-                VALUES (:contenu, :signalement_id, :user_id)";
-
-        $stmt = $this->db->prepare($sql);
-
-        $stmt->execute([
-            ':contenu' => $contenu,
-            ':signalement_id' => $signalementId,
-            ':user_id' => $userId
+        (new CommentaireRepository())->save([
+            'contenu'        => htmlspecialchars($contenu),
+            'signalement_id' => $signalementId,
+            'user_id'        => $_SESSION['user']['id'],
         ]);
 
-        header('Location: index.php?controller=signalement&action=detail&id=' . $signalementId);
-        exit;
+        header('Location: ' . BASE_URL . '/signalements/detail?id=' . $signalementId); exit;
     }
 }

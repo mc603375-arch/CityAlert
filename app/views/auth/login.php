@@ -4,7 +4,6 @@
 
 <div class="auth-container">
     <div class="auth-card">
-
         <div class="auth-logo">
             <span class="logo-icon">🚨</span>
             <h1>CityAlert</h1>
@@ -12,41 +11,27 @@
         </div>
 
         <?php if (!empty($erreur)): ?>
-            <div class="alert alert-danger">
-                ⚠️ <?= htmlspecialchars($erreur) ?>
-            </div>
+            <div class="alert alert-danger">⚠️ <?= htmlspecialchars($erreur) ?></div>
         <?php endif; ?>
-
         <?php if (!empty($success)): ?>
-            <div class="alert alert-success">
-                ✅ <?= htmlspecialchars($success) ?>
-            </div>
+            <div class="alert alert-success">✅ <?= htmlspecialchars($success) ?></div>
         <?php endif; ?>
 
         <form method="POST" action="<?= BASE_URL ?>/login/traiter">
-
             <div class="form-group">
                 <label for="email">📧 Email</label>
                 <input type="email" id="email" name="email" placeholder="votre@email.com" required>
             </div>
-
             <div class="form-group">
                 <label for="password">🔒 Mot de passe</label>
                 <input type="password" id="password" name="password" placeholder="Votre mot de passe" required>
             </div>
-
-            <button type="submit" class="btn btn-primary btn-full">
-                Se connecter →
-            </button>
-
+            <button type="submit" class="btn btn-primary btn-full">Se connecter →</button>
         </form>
 
         <div class="auth-footer">
-            <p>Pas encore de compte ?
-                <a href="<?= BASE_URL ?>/register">S'inscrire</a>
-            </p>
+            <p>Pas encore de compte ? <a href="<?= BASE_URL ?>/register">S'inscrire</a></p>
         </div>
-
     </div>
 </div>
 

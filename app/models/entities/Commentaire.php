@@ -1,51 +1,34 @@
 <?php
+require_once ROOT_PATH . '/traits/Timestampable.php';
 
 class Commentaire
 {
-    // -------------------------------------------------------
-    // ATTRIBUTS PRIVÉS
-    // -------------------------------------------------------
+    use Timestampable;
+
     private int    $id;
     private string $contenu;
-    private int    $signalement_id;
-    private int    $user_id;
-    private string $created_at;
+    private int    $signalementId;
+    private int    $userId;
 
-    // -------------------------------------------------------
-    // CONSTRUCTEUR
-    // -------------------------------------------------------
-    public function __construct(
-        string $contenu,
-        int    $signalement_id,
-        int    $user_id
-    ) {
-        $this->contenu        = $contenu;
-        $this->signalement_id = $signalement_id;
-        $this->user_id        = $user_id;
-        $this->created_at     = date('Y-m-d H:i:s');
+    public function __construct(string $contenu, int $signalementId, int $userId)
+    {
+        $this->contenu       = $contenu;
+        $this->signalementId = $signalementId;
+        $this->userId        = $userId;
+        $this->initTimestamps();
     }
 
-    // -------------------------------------------------------
-    // GETTERS
-    // -------------------------------------------------------
-    public function getId(): int              { return $this->id; }
-    public function getContenu(): string      { return $this->contenu; }
-    public function getSignalementId(): int   { return $this->signalement_id; }
-    public function getUserId(): int          { return $this->user_id; }
-    public function getCreatedAt(): string    { return $this->created_at; }
+    public function getId(): int            { return $this->id; }
+    public function getContenu(): string    { return $this->contenu; }
+    public function getSignalementId(): int { return $this->signalementId; }
+    public function getUserId(): int        { return $this->userId; }
 
-    // -------------------------------------------------------
-    // Crée un Commentaire depuis un tableau (retour BDD)
-    // -------------------------------------------------------
     public static function fromArray(array $data): self
     {
-        $c = new self(
-            $data['contenu'],
-            $data['signalement_id'],
-            $data['user_id']
-        );
-        $c->id         = $data['id'];
-        $c->created_at = $data['created_at'];
+        $c = new self($data['contenu'], (int)$data['signalement_id'], (int)$data['user_id']);
+        $c->id         = (int)$data['id'];
+        $c->created_at = $data['created_at'] ?? date('Y-m-d H:i:s');
+        $c->updated_at = $data['created_at'] ?? date('Y-m-d H:i:s');
         return $c;
     }
 }

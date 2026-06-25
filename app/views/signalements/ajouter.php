@@ -1,67 +1,51 @@
-<?php require_once __DIR__ . '/../layout/header.php'; ?>
-<?php require_once __DIR__ . '/../layout/navbar.php'; ?>
+<?php $pageTitle = "Nouveau signalement — CityAlert"; ?>
+<?php require_once VIEW_PATH . '/layout/header.php'; ?>
+<?php require_once VIEW_PATH . '/layout/navbar.php'; ?>
 
-<div class="container mt-4">
+<div class="container">
+    <div class="page-header">
+        <h1>📝 Nouveau signalement</h1>
+        <a href="<?= BASE_URL ?>/signalements" class="btn btn-outline">← Retour</a>
+    </div>
 
-    <h1>Ajouter un signalement</h1>
+    <?php if (!empty($erreur)): ?>
+        <div class="alert alert-danger">⚠️ <?= $erreur ?></div>
+    <?php endif; ?>
 
-    <form action="index.php?controller=signalement&action=store"
-          method="POST"
-          enctype="multipart/form-data">
-
-        <div class="mb-3">
-            <label for="titre" class="form-label">Titre</label>
-            <input type="text" name="titre" id="titre" class="form-control" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea name="description" id="description" class="form-control" rows="5" required></textarea>
-        </div>
-
-        <div class="mb-3">
-            <label for="adresse" class="form-label">Adresse</label>
-            <input type="text" name="adresse" id="adresse" class="form-control" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="categorie_id" class="form-label">Catégorie</label>
-            <select name="categorie_id" id="categorie_id" class="form-select" required>
-                <option value="">Choisir une catégorie</option>
-
-                <?php if (!empty($categories)): ?>
-                    <?php foreach ($categories as $categorie): ?>
-                        <option value="<?= htmlspecialchars($categorie['id']) ?>">
-                            <?= htmlspecialchars($categorie['libelle']) ?>
-                        </option>
+    <div class="form-card">
+        <form method="POST" action="<?= BASE_URL ?>/signalements/ajouter" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="titre">Titre *</label>
+                <input type="text" id="titre" name="titre" placeholder="Ex: Nid-de-poule dangereux" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description *</label>
+                <textarea id="description" name="description" rows="4" placeholder="Décrivez le problème en détail..." required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="adresse">Adresse *</label>
+                <input type="text" id="adresse" name="adresse" placeholder="Ex: Rue 10, Médina, Dakar" required>
+            </div>
+            <div class="form-group">
+                <label for="categorie_id">Catégorie *</label>
+                <select id="categorie_id" name="categorie_id" required>
+                    <option value="">Choisir une catégorie</option>
+                    <?php foreach ($categories as $cat): ?>
+                        <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['libelle']) ?></option>
                     <?php endforeach; ?>
-                <?php endif; ?>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label for="priorite" class="form-label">Priorité</label>
-            <select name="priorite" id="priorite" class="form-select" required>
-                <option value="basse">Basse</option>
-                <option value="normale" selected>Normale</option>
-                <option value="haute">Haute</option>
-                <option value="urgente">Urgente</option>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label for="photo" class="form-label">Photo</label>
-            <input type="file" name="photo" id="photo" class="form-control" accept="image/*">
-        </div>
-
-        <button type="submit" class="btn btn-success">Envoyer</button>
-
-        <a href="index.php?controller=signalement&action=liste" class="btn btn-secondary">
-            Annuler
-        </a>
-
-    </form>
-
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="photo">Photo (optionnel)</label>
+                <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp">
+                <small>Formats acceptés : JPG, PNG, WEBP — Max 2Mo</small>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Envoyer le signalement</button>
+                <a href="<?= BASE_URL ?>/signalements" class="btn btn-outline">Annuler</a>
+            </div>
+        </form>
+    </div>
 </div>
 
-<?php require_once __DIR__ . '/../layout/footer.php'; ?>
+<?php require_once VIEW_PATH . '/layout/footer.php'; ?>

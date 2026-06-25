@@ -1,74 +1,45 @@
 <?php
-
 class Router
 {
-    // -------------------------------------------------------
-    // Tableau des routes enregistrées
-    // -------------------------------------------------------
     private array $routes = [];
 
-    // -------------------------------------------------------
-    // Ajouter une route GET
-    // -------------------------------------------------------
-    public function get(string $path, string $controller, string $method): void
+    public function get(string $url, string $ctrl, string $action): void
     {
-        $this->routes['GET'][$path] = [
-            'controller' => $controller,
-            'method'     => $method
-        ];
+        $this->routes['GET'][$url] = compact('ctrl', 'action');
     }
 
-    // -------------------------------------------------------
-    // Ajouter une route POST
-    // -------------------------------------------------------
-    public function post(string $path, string $controller, string $method): void
+    public function post(string $url, string $ctrl, string $action): void
     {
-        $this->routes['POST'][$path] = [
-            'controller' => $controller,
-            'method'     => $method
-        ];
+        $this->routes['POST'][$url] = compact('ctrl', 'action');
     }
 
-    // -------------------------------------------------------
-    // Dispatcher — trouve et exécute la bonne route
-    // -------------------------------------------------------
     public function dispatch(): void
     {
-        // Récupère la méthode HTTP (GET ou POST)
-        $httpMethod = $_SERVER['REQUEST_METHOD'];
+        $method = $_SERVER['REQUEST_METHOD'];
+        $uri    = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-        // Récupère l'URL demandée
-        $uri = $_SERVER['REQUEST_URI'];
-
-        // Supprime les paramètres GET de l'URL (?id=1)
-        $uri = strtok($uri, '?');
-
-        // Supprime le chemin de base ET un éventuel index.php
-        $uri = str_replace('/CityAlert/index.php', '', $uri);
-        $uri = str_replace('/CityAlert', '', $uri);
-
-        // Si l'URI est vide ou juste "/", on affiche login par défaut
-        if ($uri === '' || $uri === '/') {
-            $uri = '/login';
+        // Supprime le préfixe /CityAlert
+        if (str_starts_with($uri, BASE_PATH)) {
+            $uri = substr($uri, strlen(BASE_PATH));
         }
 
-        // Cherche la route correspondante
-        if (isset($this->routes[$httpMethod][$uri])) {
-            $route      = $this->routes[$httpMethod][$uri];
-            $controller = new $route['controller']();
-            $method     = $route['method'];
-            $controller->$method();
-        } else {
-            $this->notFound();
+        // Supprime aussi /index.php si présent
+        if (str_starts_with($uri, '/index.php')) {
+            $uri = substr($uri, strlen('/index.php'));
         }
-    }
 
-    // -------------------------------------------------------
-    // Page 404
-    // -------------------------------------------------------
-    private function notFound(): void
-    {
+        $uri = '/' . trim($uri, '/');
+        if ($uri === '/') $uri = '/login';
+
+        if (isset($this->routes[$method][$uri])) {
+            $r    = $this->routes[$method][$uri];
+            $ctrl = new $r['ctrl']();
+            $ctrl->{$r['action']}();
+            return;
+        }
+
         http_response_code(404);
-        echo "<h1>404 - Page non trouvée</h1>";
+        $f = VIEW_PATH . '/errors/404.php';
+        file_exists($f) ? require $f : print "<h1>404 — Page introuvable</h1>";
     }
 }

@@ -1,39 +1,20 @@
 <?php
-
-// =====================================================
-// CONFIGURATION GÉNÉRALE DU PROJET
-// =====================================================
-
-// URL de base du projet
-define('BASE_URL', 'http://localhost/CityAlert');
-
-// Chemins
-define('ROOT_PATH',  __DIR__ . '/..');
-define('APP_PATH',   ROOT_PATH . '/app');
-define('VIEW_PATH',  APP_PATH . '/views');
-
-// Base de données
-define('DB_HOST',    'localhost');
-define('DB_NAME',    'cityalert');
-define('DB_USER',    'root');
-define('DB_PASS',    '');
-define('DB_CHARSET', 'utf8');
-
-// Session
-define('SESSION_NAME', 'cityalert_session');
-
-// Rôles
-define('ROLE_CITOYEN', 'citoyen');
-define('ROLE_AGENT',   'agent');
-define('ROLE_ADMIN',   'admin');
-
-// Statuts des signalements
-define('STATUT_NOUVEAU',   'nouveau');
-define('STATUT_EN_COURS',  'en_cours');
-define('STATUT_RESOLU',    'resolu');
-define('STATUT_REJETE',    'rejete');
-
-// Upload photos
+define('BASE_URL',    'http://localhost:8888/CityAlert/index.php');
+define('BASE_PATH',   '/CityAlert/index.php');
+define('ROOT_PATH',   realpath(__DIR__ . '/..'));
+define('APP_PATH',    ROOT_PATH . '/app');
+define('VIEW_PATH',   APP_PATH  . '/views');
+define('DB_HOST',     '127.0.0.1');
+define('DB_PORT',     '8889');
+define('DB_NAME',     'cityalert');
+define('DB_USER',     'root');
+define('DB_PASS',     'root');
+define('DB_CHARSET',  'utf8');
+define('SESSION_NAME','cityalert_session');
+define('ROLE_CITOYEN','citoyen');
+define('ROLE_AGENT',  'agent');
+define('ROLE_ADMIN',  'admin');
 define('UPLOAD_PATH', ROOT_PATH . '/public/assets/images/uploads');
-define('UPLOAD_URL',  BASE_URL  . '/public/assets/images/uploads');
-define('MAX_FILE_SIZE', 2 * 1024 * 1024); // 2MB
+define('UPLOAD_URL',  'http://localhost:8888/CityAlert/public/assets/images/uploads');
+define('ASSETS_URL', 'http://localhost:8888/CityAlert/public/assets');
+define('MAX_FILE_SIZE', 2 * 1024 * 1024);

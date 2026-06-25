@@ -1,26 +1,15 @@
 <?php
-
 require_once __DIR__ . '/Categorie.php';
 
 class Voirie extends Categorie
 {
-    public function __construct()
+    public function getComportementSpecifique(): string
     {
-        parent::__construct('Voirie', 'haute', 5);
+        return "Traitement {->libelle} — délai : {->delaiJours} jours, priorité : {->priorite}.";
     }
 
-    public function getPriorite(): string
+    public function getMessageCreation(): string
     {
-        return 'haute';
-    }
-
-    public function getDelaiTraitement(): int
-    {
-        return 5; // 5 jours
-    }
-
-    public function getDescription(): string
-    {
-        return "Problèmes liés aux routes, trottoirs et infrastructure routière.";
+        return "✅ Signalement enregistré dans la catégorie {->libelle}. Délai d'intervention : {->delaiJours} jours.";
     }
 }

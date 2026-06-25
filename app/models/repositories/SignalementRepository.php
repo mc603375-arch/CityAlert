@@ -1,7 +1,12 @@
 <?php
-
 require_once ROOT_PATH . '/interfaces/RepositoryInterface.php';
 require_once ROOT_PATH . '/config/Database.php';
+require_once ROOT_PATH . '/app/models/entities/categories/Categorie.php';
+require_once ROOT_PATH . '/app/models/entities/categories/Voirie.php';
+require_once ROOT_PATH . '/app/models/entities/categories/Eclairage.php';
+require_once ROOT_PATH . '/app/models/entities/categories/Dechets.php';
+require_once ROOT_PATH . '/app/models/entities/categories/EauAssainissement.php';
+require_once ROOT_PATH . '/exceptions/EntityNotFoundException.php';
 
 class SignalementRepository implements RepositoryInterface
 {
@@ -12,159 +17,162 @@ class SignalementRepository implements RepositoryInterface
         $this->db = Database::getInstance()->getConnexion();
     }
 
-    // -------------------------------------------------------
-    // READ — Tous les signalements avec infos auteur/catégorie
-    // -------------------------------------------------------
     public function findAll(): array
     {
-        $stmt = $this->db->prepare(
-            "SELECT s.*,
-                    u.nom AS user_nom, u.prenom AS user_prenom,
-                    c.libelle AS categorie_libelle,
-                    a.nom AS agent_nom, a.prenom AS agent_prenom
-             FROM signalements s
-             JOIN users u      ON s.user_id      = u.id
-             JOIN categories c ON s.categorie_id = c.id
-             LEFT JOIN users a ON s.agent_id     = a.id
+        return $this->db->query(
+            "SELECT s.*, c.libelle AS categorie_libelle
+             FROM signalements s LEFT JOIN categories c ON c.id = s.categorie_id
              ORDER BY s.created_at DESC"
-        );
-        $stmt->execute();
-        return $stmt->fetchAll();
+        )->fetchAll();
     }
 
-    // -------------------------------------------------------
-    // READ — Un signalement par id
-    // -------------------------------------------------------
     public function findById(int $id): array|false
     {
         $stmt = $this->db->prepare(
-            "SELECT s.*,
-                    u.nom AS user_nom, u.prenom AS user_prenom,
-                    c.libelle AS categorie_libelle,
-                    a.nom AS agent_nom, a.prenom AS agent_prenom
+            "SELECT s.*, c.libelle AS categorie_libelle,
+                    u.nom AS citoyen_nom, u.prenom AS citoyen_prenom
              FROM signalements s
-             JOIN users u      ON s.user_id      = u.id
-             JOIN categories c ON s.categorie_id = c.id
-             LEFT JOIN users a ON s.agent_id     = a.id
+             LEFT JOIN categories c ON c.id = s.categorie_id
+             LEFT JOIN users u ON u.id = s.user_id
              WHERE s.id = :id"
         );
         $stmt->execute([':id' => $id]);
-        return $stmt->fetch();
+        $data = $stmt->fetch();
+        if (!$data) throw new EntityNotFoundException('Signalement', $id);
+        return $data;
     }
 
-    // -------------------------------------------------------
-    // READ — Signalements par statut
-    // -------------------------------------------------------
+    public function findByUser(int $userId): array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT s.*, c.libelle AS categorie_libelle
+             FROM signalements s LEFT JOIN categories c ON c.id = s.categorie_id
+             WHERE s.user_id = :uid ORDER BY s.created_at DESC"
+        );
+        $stmt->execute([':uid' => $userId]);
+        return $stmt->fetchAll();
+    }
+
     public function findByStatut(string $statut): array
     {
         $stmt = $this->db->prepare(
-            "SELECT s.*,
-                    u.nom AS user_nom, u.prenom AS user_prenom,
-                    c.libelle AS categorie_libelle
-             FROM signalements s
-             JOIN users u      ON s.user_id      = u.id
-             JOIN categories c ON s.categorie_id = c.id
-             WHERE s.statut = :statut
-             ORDER BY s.created_at DESC"
+            "SELECT s.*, c.libelle AS categorie_libelle
+             FROM signalements s LEFT JOIN categories c ON c.id = s.categorie_id
+             WHERE s.statut = :statut ORDER BY s.created_at DESC"
         );
         $stmt->execute([':statut' => $statut]);
         return $stmt->fetchAll();
     }
 
-    // -------------------------------------------------------
-    // READ — Signalements d'un citoyen
-    // -------------------------------------------------------
-    public function findByUserId(int $user_id): array
+    public function paginer(int $page, int $limite, array $filtres = []): array
     {
-        $stmt = $this->db->prepare(
-            "SELECT s.*, c.libelle AS categorie_libelle
-             FROM signalements s
-             JOIN categories c ON s.categorie_id = c.id
-             WHERE s.user_id = :user_id
-             ORDER BY s.created_at DESC"
-        );
-        $stmt->execute([':user_id' => $user_id]);
+        $offset = ($page - 1) * $limite;
+        $where  = [];
+        $params = [];
+
+        if (!empty($filtres['statut']))       { $where[] = 's.statut = :statut';      $params[':statut'] = $filtres['statut']; }
+        if (!empty($filtres['categorie_id'])) { $where[] = 's.categorie_id = :cid';   $params[':cid']    = $filtres['categorie_id']; }
+        if (!empty($filtres['user_id']))      { $where[] = 's.user_id = :uid';         $params[':uid']    = $filtres['user_id']; }
+
+        $sql = "SELECT s.*, c.libelle AS categorie_libelle
+                FROM signalements s LEFT JOIN categories c ON c.id = s.categorie_id";
+        if ($where) $sql .= ' WHERE ' . implode(' AND ', $where);
+        $sql .= ' ORDER BY s.created_at DESC LIMIT :limite OFFSET :offset';
+
+        $stmt = $this->db->prepare($sql);
+        foreach ($params as $k => $v) $stmt->bindValue($k, $v);
+        $stmt->bindValue(':limite',  $limite,  PDO::PARAM_INT);
+        $stmt->bindValue(':offset',  $offset,  PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 
-    // -------------------------------------------------------
-    // READ — Statistiques pour le dashboard admin
-    // -------------------------------------------------------
-    public function getStatistiques(): array
+    public function compter(array $filtres = []): int
     {
-        $stmt = $this->db->prepare(
-            "SELECT
-                COUNT(*) AS total,
-                SUM(statut = 'nouveau')  AS nouveau,
-                SUM(statut = 'en_cours') AS en_cours,
-                SUM(statut = 'resolu')   AS resolu,
-                SUM(statut = 'rejete')   AS rejete
-             FROM signalements"
-        );
-        $stmt->execute();
-        return $stmt->fetch();
+        $where  = [];
+        $params = [];
+        if (!empty($filtres['statut']))       { $where[] = 'statut = :statut';      $params[':statut'] = $filtres['statut']; }
+        if (!empty($filtres['categorie_id'])) { $where[] = 'categorie_id = :cid';   $params[':cid']    = $filtres['categorie_id']; }
+        if (!empty($filtres['user_id']))      { $where[] = 'user_id = :uid';         $params[':uid']    = $filtres['user_id']; }
+
+        $sql = 'SELECT COUNT(*) FROM signalements';
+        if ($where) $sql .= ' WHERE ' . implode(' AND ', $where);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return (int)$stmt->fetchColumn();
     }
 
-    // -------------------------------------------------------
-    // CREATE / UPDATE
-    // -------------------------------------------------------
     public function save(array $data): bool
     {
-        if (isset($data['id'])) {
-            // UPDATE
+        if (empty($data['id'])) {
+            // INSERT
             $stmt = $this->db->prepare(
-                "UPDATE signalements
-                 SET titre = :titre, description = :description,
-                     adresse = :adresse, statut = :statut,
-                     priorite = :priorite, agent_id = :agent_id,
-                     updated_at = NOW()
-                 WHERE id = :id"
-            );
-            return $stmt->execute([
-                ':id'          => $data['id'],
-                ':titre'       => $data['titre'],
-                ':description' => $data['description'],
-                ':adresse'     => $data['adresse'],
-                ':statut'      => $data['statut'],
-                ':priorite'    => $data['priorite'],
-                ':agent_id'    => $data['agent_id'] ?? null
-            ]);
-        } else {
-            // CREATE
-            $stmt = $this->db->prepare(
-                "INSERT INTO signalements
-                 (titre, description, adresse, photo, priorite, user_id, categorie_id)
-                 VALUES
-                 (:titre, :description, :adresse, :photo, :priorite, :user_id, :categorie_id)"
+                "INSERT INTO signalements (titre, description, adresse, photo, statut, priorite, user_id, categorie_id, agent_id)
+                 VALUES (:titre, :description, :adresse, :photo, :statut, :priorite, :user_id, :categorie_id, :agent_id)"
             );
             return $stmt->execute([
                 ':titre'        => $data['titre'],
                 ':description'  => $data['description'],
                 ':adresse'      => $data['adresse'],
-                ':photo'        => $data['photo'] ?? null,
-                ':priorite'     => $data['priorite'] ?? 'normale',
+                ':photo'        => $data['photo']        ?? null,
+                ':statut'       => $data['statut']       ?? 'nouveau',
+                ':priorite'     => $data['priorite']     ?? 'normale',
                 ':user_id'      => $data['user_id'],
-                ':categorie_id' => $data['categorie_id']
+                ':categorie_id' => $data['categorie_id'],
+                ':agent_id'     => $data['agent_id']     ?? null,
             ]);
         }
+
+        // UPDATE — paramètres séparés proprement
+        $stmt = $this->db->prepare(
+            "UPDATE signalements
+             SET titre        = :titre,
+                 description  = :description,
+                 adresse      = :adresse,
+                 photo        = :photo,
+                 statut       = :statut,
+                 priorite     = :priorite,
+                 categorie_id = :categorie_id,
+                 agent_id     = :agent_id
+             WHERE id = :id"
+        );
+        return $stmt->execute([
+            ':titre'        => $data['titre'],
+            ':description'  => $data['description'],
+            ':adresse'      => $data['adresse'],
+            ':photo'        => $data['photo']        ?? null,
+            ':statut'       => $data['statut']       ?? 'nouveau',
+            ':priorite'     => $data['priorite']     ?? 'normale',
+            ':categorie_id' => $data['categorie_id'],
+            ':agent_id'     => $data['agent_id']     ?? null,
+            ':id'           => $data['id'],
+        ]);
     }
 
-    // -------------------------------------------------------
-    // DELETE
-    // -------------------------------------------------------
-    public function delete(int $id): bool
+    public function changerStatut(int $id, string $nouveauStatut, string $commentaire, int $agentId): bool
+    {
+        $ancien = $this->findById($id)['statut'];
+        $this->db->prepare("UPDATE signalements SET statut=:s, agent_id=:a WHERE id=:id")
+                 ->execute([':s' => $nouveauStatut, ':a' => $agentId, ':id' => $id]);
+        return $this->db->prepare(
+            "INSERT INTO historique_statuts (signalement_id, ancien_statut, nouveau_statut, commentaire, agent_id)
+             VALUES (:sig, :ancien, :nouveau, :com, :agent)"
+        )->execute([':sig' => $id, ':ancien' => $ancien, ':nouveau' => $nouveauStatut, ':com' => $commentaire, ':agent' => $agentId]);
+    }
+
+    public function getHistorique(int $sigId): array
     {
         $stmt = $this->db->prepare(
-            "DELETE FROM signalements WHERE id = :id"
+            "SELECT h.*, u.nom AS agent_nom, u.prenom AS agent_prenom
+             FROM historique_statuts h LEFT JOIN users u ON u.id = h.agent_id
+             WHERE h.signalement_id = :sid ORDER BY h.created_at ASC"
         );
-        return $stmt->execute([':id' => $id]);
+        $stmt->execute([':sid' => $sigId]);
+        return $stmt->fetchAll();
     }
 
-    // -------------------------------------------------------
-    // Récupère le dernier id inséré
-    // -------------------------------------------------------
-    public function getLastInsertId(): int
+    public function delete(int $id): bool
     {
-        return (int)$this->db->lastInsertId();
+        return $this->db->prepare("DELETE FROM signalements WHERE id=:id")->execute([':id' => $id]);
     }
 }

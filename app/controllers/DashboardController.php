@@ -1,110 +1,61 @@
 <?php
-
-require_once __DIR__ . '/../../config/Database.php';
+require_once ROOT_PATH . '/config/Database.php';
 
 class DashboardController
 {
-    private $db;
+    private PDO $db;
 
     public function __construct()
     {
-        $database = new Database();
-        $this->db = $database->getConnection();
+        $this->db = Database::getInstance()->getConnexion();
     }
 
-    public function index()
+    private function requireAuth(): void
     {
-        if (!isset($_SESSION['user'])) {
-            header('Location: index.php?controller=auth&action=login');
-            exit;
-        }
-
-        $role = $_SESSION['user']['role'];
-
-        if ($role === 'citoyen') {
-            $this->citoyen();
-            return;
-        }
-
-        if ($role === 'agent') {
-            $this->agent();
-            return;
-        }
-
-        if ($role === 'admin') {
-            $this->admin();
-            return;
-        }
-
-        header('Location: index.php');
-        exit;
+        if (!isset($_SESSION['user'])) { header('Location: ' . BASE_URL . '/login'); exit; }
     }
 
-    public function citoyen()
+    public function citoyen(): void
     {
-        if (!isset($_SESSION['user'])) {
-            header('Location: index.php?controller=auth&action=login');
-            exit;
-        }
-
-        $userId = (int) $_SESSION['user']['id'];
-
-        $sql = "SELECT s.*, c.libelle AS categorie
-                FROM signalements s
-                LEFT JOIN categories c ON c.id = s.categorie_id
-                WHERE s.user_id = :user_id
-                ORDER BY s.created_at DESC";
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':user_id' => $userId]);
-
-        $signalements = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        require __DIR__ . '/../views/dashboard/citoyen.php';
+        $this->requireAuth();
+        $userId = (int)$_SESSION['user']['id'];
+        $stmt   = $this->db->prepare(
+            "SELECT s.*, c.libelle AS categorie FROM signalements s
+             LEFT JOIN categories c ON c.id = s.categorie_id
+             WHERE s.user_id = :uid ORDER BY s.created_at DESC"
+        );
+        $stmt->execute([':uid' => $userId]);
+        $signalements = $stmt->fetchAll();
+        require VIEW_PATH . '/dashboard/citoyen.php';
     }
 
-    public function agent()
+    public function agent(): void
     {
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'agent') {
-            header('Location: index.php?controller=dashboard&action=index');
-            exit;
-        }
-
-        $agentId = (int) $_SESSION['user']['id'];
-
-        $sql = "SELECT s.*, c.libelle AS categorie
-                FROM signalements s
-                LEFT JOIN categories c ON c.id = s.categorie_id
-                WHERE s.agent_id = :agent_id OR s.agent_id IS NULL
-                ORDER BY s.created_at DESC";
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':agent_id' => $agentId]);
-
-        $signalements = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        require __DIR__ . '/../views/dashboard/agent.php';
+        $this->requireAuth();
+        if ($_SESSION['user']['role'] !== ROLE_AGENT) { header('Location: ' . BASE_URL . '/citoyen/dashboard'); exit; }
+        $stmt = $this->db->prepare(
+            "SELECT s.*, c.libelle AS categorie FROM signalements s
+             LEFT JOIN categories c ON c.id = s.categorie_id
+             WHERE s.agent_id = :aid OR s.statut = 'nouveau'
+             ORDER BY s.created_at DESC"
+        );
+        $stmt->execute([':aid' => $_SESSION['user']['id']]);
+        $signalements = $stmt->fetchAll();
+        require VIEW_PATH . '/dashboard/agent.php';
     }
 
-    public function admin()
+    public function admin(): void
     {
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-            header('Location: index.php?controller=dashboard&action=index');
-            exit;
-        }
-
-        $totalUsers = $this->db->query("SELECT COUNT(*) FROM users")->fetchColumn();
-
-        $totalSignalements = $this->db->query("SELECT COUNT(*) FROM signalements")->fetchColumn();
-
-        $nouveaux = $this->db
-            ->query("SELECT COUNT(*) FROM signalements WHERE statut = 'nouveau'")
-            ->fetchColumn();
-
-        $resolus = $this->db
-            ->query("SELECT COUNT(*) FROM signalements WHERE statut = 'resolu'")
-            ->fetchColumn();
-
-        require __DIR__ . '/../views/dashboard/admin.php';
+        $this->requireAuth();
+        if ($_SESSION['user']['role'] !== ROLE_ADMIN) { header('Location: ' . BASE_URL . '/citoyen/dashboard'); exit; }
+        $totalUsers       = $this->db->query("SELECT COUNT(*) FROM users")->fetchColumn();
+        $totalSignalements= $this->db->query("SELECT COUNT(*) FROM signalements")->fetchColumn();
+        $nouveaux         = $this->db->query("SELECT COUNT(*) FROM signalements WHERE statut='nouveau'")->fetchColumn();
+        $resolus          = $this->db->query("SELECT COUNT(*) FROM signalements WHERE statut='resolu'")->fetchColumn();
+        $parCategorie     = $this->db->query(
+            "SELECT c.libelle, COUNT(s.id) AS total FROM categories c
+             LEFT JOIN signalements s ON s.categorie_id = c.id GROUP BY c.id, c.libelle"
+        )->fetchAll();
+        require VIEW_PATH . '/dashboard/admin.php';
     }
 }

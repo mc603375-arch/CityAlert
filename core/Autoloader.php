@@ -1,39 +1,40 @@
 <?php
-
 class Autoloader
 {
-    // -------------------------------------------------------
-    // Enregistre l'autoloader
-    // À appeler une seule fois dans index.php
-    // -------------------------------------------------------
     public static function register(): void
     {
-        spl_autoload_register(function (string $className) {
+        spl_autoload_register([self::class, 'load']);
+    }
 
-            // Convertit les \ en / pour les namespaces
-            $className = str_replace('\\', '/', $className);
-
-            // Liste des dossiers où chercher les classes
-            $directories = [
-                ROOT_PATH . '/app/models/entities/',
-                ROOT_PATH . '/app/models/entities/categories/',
-                ROOT_PATH . '/app/models/repositories/',
-                ROOT_PATH . '/app/controllers/',
-                ROOT_PATH . '/config/',
-                ROOT_PATH . '/core/',
-                ROOT_PATH . '/interfaces/',
-                ROOT_PATH . '/traits/',
-                ROOT_PATH . '/exceptions/',
-            ];
-
-            // Cherche le fichier dans chaque dossier
-            foreach ($directories as $directory) {
-                $file = $directory . $className . '.php';
-                if (file_exists($file)) {
-                    require_once $file;
-                    return;
-                }
-            }
-        });
+    public static function load(string $classe): void
+    {
+        $root = realpath(dirname(__DIR__));
+        $map  = [
+            'Database'                => $root . '/config/Database.php',
+            'RepositoryInterface'     => $root . '/interfaces/RepositoryInterface.php',
+            'NotifiableInterface'     => $root . '/interfaces/NotifiableInterface.php',
+            'Timestampable'           => $root . '/traits/Timestampable.php',
+            'EntityNotFoundException' => $root . '/exceptions/EntityNotFoundException.php',
+            'ValidationException'     => $root . '/exceptions/ValidationException.php',
+            'User'                    => $root . '/app/models/entities/User.php',
+            'Signalement'             => $root . '/app/models/entities/Signalement.php',
+            'Commentaire'             => $root . '/app/models/entities/Commentaire.php',
+            'Categorie'               => $root . '/app/models/entities/categories/Categorie.php',
+            'Voirie'                  => $root . '/app/models/entities/categories/Voirie.php',
+            'Eclairage'               => $root . '/app/models/entities/categories/Eclairage.php',
+            'Dechets'                 => $root . '/app/models/entities/categories/Dechets.php',
+            'EauAssainissement'       => $root . '/app/models/entities/categories/EauAssainissement.php',
+            'UserRepository'          => $root . '/app/models/repositories/UserRepository.php',
+            'SignalementRepository'   => $root . '/app/models/repositories/SignalementRepository.php',
+            'CommentaireRepository'   => $root . '/app/models/repositories/CommentaireRepository.php',
+            'AuthController'          => $root . '/app/controllers/AuthController.php',
+            'SignalementController'   => $root . '/app/controllers/SignalementController.php',
+            'CommentaireController'   => $root . '/app/controllers/CommentaireController.php',
+            'DashboardController'     => $root . '/app/controllers/DashboardController.php',
+            'AdminController'         => $root . '/app/controllers/AdminController.php',
+        ];
+        if (isset($map[$classe]) && file_exists($map[$classe])) {
+            require_once $map[$classe];
+        }
     }
 }

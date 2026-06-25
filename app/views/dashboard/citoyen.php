@@ -1,60 +1,37 @@
-<?php require_once __DIR__ . '/../layout/header.php'; ?>
-<?php require_once __DIR__ . '/../layout/navbar.php'; ?>
+<?php $pageTitle = "Mon espace — CityAlert"; ?>
+<?php require_once VIEW_PATH . '/layout/header.php'; ?>
+<?php require_once VIEW_PATH . '/layout/navbar.php'; ?>
 
-<div class="container mt-4">
+<div class="container">
+    <div class="page-header">
+        <h1>👤 Bonjour, <?= htmlspecialchars($_SESSION['user']['prenom']) ?> !</h1>
+        <a href="<?= BASE_URL ?>/signalements/ajouter" class="btn btn-primary">+ Nouveau signalement</a>
+    </div>
 
-    <h1>Mon espace citoyen</h1>
-
-    <a href="index.php?controller=signalement&action=ajouter" class="btn btn-success mb-3">
-        Nouveau signalement
-    </a>
-
-    <h3>Mes signalements</h3>
+    <h2>Mes signalements (<?= count($signalements) ?>)</h2>
 
     <?php if (!empty($signalements)): ?>
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>Titre</th>
-                    <th>Adresse</th>
-                    <th>Catégorie</th>
-                    <th>Statut</th>
-                    <th>Priorité</th>
-                    <th>Date</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                <?php foreach ($signalements as $signalement): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($signalement['titre'] ?? '') ?></td>
-                        <td><?= htmlspecialchars($signalement['adresse'] ?? '') ?></td>
-                        <td><?= htmlspecialchars($signalement['categorie'] ?? '') ?></td>
-                        <td><?= htmlspecialchars($signalement['statut'] ?? '') ?></td>
-                        <td><?= htmlspecialchars($signalement['priorite'] ?? '') ?></td>
-                        <td><?= htmlspecialchars($signalement['created_at'] ?? '') ?></td>
-                        <td>
-                            <a href="index.php?controller=signalement&action=detail&id=<?= htmlspecialchars($signalement['id'] ?? '') ?>"
-                               class="btn btn-primary btn-sm">
-                                Voir
-                            </a>
-
-                            <a href="index.php?controller=signalement&action=modifier&id=<?= htmlspecialchars($signalement['id'] ?? '') ?>"
-                               class="btn btn-warning btn-sm">
-                                Modifier
-                            </a>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php else: ?>
-        <div class="alert alert-info">
-            Vous n’avez encore créé aucun signalement.
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr><th>Titre</th><th>Catégorie</th><th>Statut</th><th>Date</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($signalements as $sig): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($sig['titre']) ?></td>
+                            <td><?= htmlspecialchars($sig['categorie'] ?? '') ?></td>
+                            <td><span class="badge badge-<?= $sig['statut'] ?>"><?= ucfirst(str_replace('_',' ',$sig['statut'])) ?></span></td>
+                            <td><?= date('d/m/Y', strtotime($sig['created_at'])) ?></td>
+                            <td><a href="<?= BASE_URL ?>/signalements/detail?id=<?= $sig['id'] ?>" class="btn btn-sm btn-primary">Voir</a></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
+    <?php else: ?>
+        <div class="alert alert-info">Vous n'avez encore créé aucun signalement. <a href="<?= BASE_URL ?>/signalements/ajouter">Créer le premier</a></div>
     <?php endif; ?>
-
 </div>
 
-<?php require_once __DIR__ . '/../layout/footer.php'; ?>
+<?php require_once VIEW_PATH . '/layout/footer.php'; ?>

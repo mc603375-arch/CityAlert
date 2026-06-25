@@ -1,10 +1,6 @@
 <?php
-
 class ValidationException extends RuntimeException
 {
-    // -------------------------------------------------------
-    // Stocke les erreurs de validation
-    // -------------------------------------------------------
     private array $errors;
 
     public function __construct(array $errors)
@@ -13,11 +9,5 @@ class ValidationException extends RuntimeException
         parent::__construct("❌ Erreur de validation.", 422);
     }
 
-    // -------------------------------------------------------
-    // Retourne toutes les erreurs
-    // -------------------------------------------------------
-    public function getErrors(): array
-    {
-        return $this->errors;
-    }
+    public function getErrors(): array { return $this->errors; }
 }

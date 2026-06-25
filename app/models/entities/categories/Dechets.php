@@ -1,26 +1,15 @@
 <?php
-
 require_once __DIR__ . '/Categorie.php';
 
-class Dechets extends Categorie
+class Dechets extends EauAssainissement
 {
-    public function __construct()
+    public function getComportementSpecifique(): string
     {
-        parent::__construct('Dechets', 'normale', 3);
+        return "Traitement " . $this->libelle . " — délai : " . $this->delaiJours . " jours, priorité : " . $this->priorite . ".";
     }
 
-    public function getPriorite(): string
+    public function getMessageCreation(): string
     {
-        return 'normale';
-    }
-
-    public function getDelaiTraitement(): int
-    {
-        return 3; // 3 jours
-    }
-
-    public function getDescription(): string
-    {
-        return "Problèmes liés à la collecte des déchets et propreté urbaine.";
+        return "✅ Signalement enregistré dans la catégorie " . $this->libelle . ". Délai : " . $this->delaiJours . " jours.";
     }
 }

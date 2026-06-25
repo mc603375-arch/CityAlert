@@ -1,57 +1,36 @@
 <?php
-
 abstract class Categorie
 {
-    // -------------------------------------------------------
-    // ATTRIBUTS PROTÉGÉS
-    // protected = accessible dans les classes filles
-    // -------------------------------------------------------
     protected int    $id;
     protected string $libelle;
     protected string $priorite;
-    protected int    $delai_jours;
+    protected int    $delaiJours;
 
-    // -------------------------------------------------------
-    // CONSTRUCTEUR
-    // -------------------------------------------------------
-    public function __construct(
-        string $libelle,
-        string $priorite,
-        int    $delai_jours
-    ) {
-        $this->libelle     = $libelle;
-        $this->priorite    = $priorite;
-        $this->delai_jours = $delai_jours;
+    public function __construct(int $id, string $libelle, string $priorite, int $delaiJours)
+    {
+        $this->id         = $id;
+        $this->libelle    = $libelle;
+        $this->priorite   = $priorite;
+        $this->delaiJours = $delaiJours;
     }
 
-    // -------------------------------------------------------
-    // GETTERS
-    // -------------------------------------------------------
     public function getId(): int          { return $this->id; }
     public function getLibelle(): string  { return $this->libelle; }
-    public function getDelaiJours(): int  { return $this->delai_jours; }
+    public function getPriorite(): string { return $this->priorite; }
+    public function getDelaiJours(): int  { return $this->delaiJours; }
 
-    public function setId(int $id): void  { $this->id = $id; }
+    abstract public function getComportementSpecifique(): string;
+    abstract public function getMessageCreation(): string;
 
-    // -------------------------------------------------------
-    // MÉTHODES ABSTRAITES
-    // Chaque sous-classe DOIT les implémenter
-    // -------------------------------------------------------
-    abstract public function getPriorite(): string;
-    abstract public function getDelaiTraitement(): int;
-    abstract public function getDescription(): string;
-
-    // -------------------------------------------------------
-    // Crée la bonne sous-classe selon le libellé
-    // -------------------------------------------------------
-    public static function fromArray(array $data): self
+    public static function fromArray(array $d): self
     {
-        return match(strtolower($data['libelle'])) {
-            'voirie'               => new Voirie(),
-            'eclairage'            => new Eclairage(),
-            'dechets'              => new Dechets(),
-            'eau et assainissement'=> new EauAssainissement(),
-            default                => new Voirie()
+        $args = [(int)$d['id'], $d['libelle'], $d['priorite'], (int)$d['delai_jours']];
+        $lib  = strtolower($d['libelle']);
+        return match(true) {
+            str_contains($lib, 'voirie')    => new Voirie(...$args),
+            str_contains($lib, 'eclairage') => new Eclairage(...$args),
+            str_contains($lib, 'dechet')    => new Dechets(...$args),
+            default                         => new EauAssainissement(...$args),
         };
     }
 }
