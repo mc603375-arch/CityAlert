@@ -8,6 +8,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-    <script src="<?= ASSETS_URL ?>/js/icons.js" defer></script>
+    <script src="<?= ASSETS_URL ?>/js/icon.js" defer></script>
 </head>
 <body>
