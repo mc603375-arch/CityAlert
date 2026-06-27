@@ -69,10 +69,9 @@ class SignalementRepository implements RepositoryInterface
         $offset = ($page - 1) * $limite;
         $where  = [];
         $params = [];
-
-        if (!empty($filtres['statut']))       { $where[] = 's.statut = :statut';      $params[':statut'] = $filtres['statut']; }
-        if (!empty($filtres['categorie_id'])) { $where[] = 's.categorie_id = :cid';   $params[':cid']    = $filtres['categorie_id']; }
-        if (!empty($filtres['user_id']))      { $where[] = 's.user_id = :uid';         $params[':uid']    = $filtres['user_id']; }
+        if (!empty($filtres['statut']))       { $where[] = 's.statut = :statut';    $params[':statut'] = $filtres['statut']; }
+        if (!empty($filtres['categorie_id'])) { $where[] = 's.categorie_id = :cid'; $params[':cid']    = $filtres['categorie_id']; }
+        if (!empty($filtres['user_id']))      { $where[] = 's.user_id = :uid';       $params[':uid']    = $filtres['user_id']; }
 
         $sql = "SELECT s.*, c.libelle AS categorie_libelle
                 FROM signalements s LEFT JOIN categories c ON c.id = s.categorie_id";
@@ -94,7 +93,6 @@ class SignalementRepository implements RepositoryInterface
         if (!empty($filtres['statut']))       { $where[] = 'statut = :statut';      $params[':statut'] = $filtres['statut']; }
         if (!empty($filtres['categorie_id'])) { $where[] = 'categorie_id = :cid';   $params[':cid']    = $filtres['categorie_id']; }
         if (!empty($filtres['user_id']))      { $where[] = 'user_id = :uid';         $params[':uid']    = $filtres['user_id']; }
-
         $sql = 'SELECT COUNT(*) FROM signalements';
         if ($where) $sql .= ' WHERE ' . implode(' AND ', $where);
         $stmt = $this->db->prepare($sql);
@@ -105,10 +103,9 @@ class SignalementRepository implements RepositoryInterface
     public function save(array $data): bool
     {
         if (empty($data['id'])) {
-            // INSERT
             $stmt = $this->db->prepare(
-                "INSERT INTO signalements (titre, description, adresse, photo, statut, priorite, user_id, categorie_id, agent_id)
-                 VALUES (:titre, :description, :adresse, :photo, :statut, :priorite, :user_id, :categorie_id, :agent_id)"
+                "INSERT INTO signalements (titre, description, adresse, photo, statut, priorite, user_id, categorie_id, agent_id, lat, lng)
+                 VALUES (:titre, :description, :adresse, :photo, :statut, :priorite, :user_id, :categorie_id, :agent_id, :lat, :lng)"
             );
             return $stmt->execute([
                 ':titre'        => $data['titre'],
@@ -120,21 +117,17 @@ class SignalementRepository implements RepositoryInterface
                 ':user_id'      => $data['user_id'],
                 ':categorie_id' => $data['categorie_id'],
                 ':agent_id'     => $data['agent_id']     ?? null,
+                ':lat'          => $data['lat']          ?? null,
+                ':lng'          => $data['lng']          ?? null,
             ]);
         }
 
-        // UPDATE — paramètres séparés proprement
         $stmt = $this->db->prepare(
             "UPDATE signalements
-             SET titre        = :titre,
-                 description  = :description,
-                 adresse      = :adresse,
-                 photo        = :photo,
-                 statut       = :statut,
-                 priorite     = :priorite,
-                 categorie_id = :categorie_id,
-                 agent_id     = :agent_id
-             WHERE id = :id"
+             SET titre=:titre, description=:description, adresse=:adresse,
+                 photo=:photo, statut=:statut, priorite=:priorite,
+                 categorie_id=:categorie_id, agent_id=:agent_id, lat=:lat, lng=:lng
+             WHERE id=:id"
         );
         return $stmt->execute([
             ':titre'        => $data['titre'],
@@ -145,6 +138,8 @@ class SignalementRepository implements RepositoryInterface
             ':priorite'     => $data['priorite']     ?? 'normale',
             ':categorie_id' => $data['categorie_id'],
             ':agent_id'     => $data['agent_id']     ?? null,
+            ':lat'          => $data['lat']          ?? null,
+            ':lng'          => $data['lng']          ?? null,
             ':id'           => $data['id'],
         ]);
     }
