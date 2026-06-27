@@ -15,21 +15,26 @@ require_once __DIR__ . '/app/controllers/DashboardController.php';
 require_once __DIR__ . '/app/controllers/AdminController.php';
 require_once __DIR__ . '/app/controllers/CommentaireController.php';
 require_once __DIR__ . '/app/controllers/SignalementController.php';
+require_once __DIR__ . '/app/controllers/ApiController.php';
+require_once __DIR__ . '/app/controllers/ExportController.php';
 
 require_once __DIR__ . '/core/Router.php';
 $router = new Router();
 
+// Auth
 $router->get( '/login',            'AuthController', 'login');
 $router->post('/login/traiter',    'AuthController', 'traiterLogin');
 $router->get( '/register',         'AuthController', 'register');
 $router->post('/register/traiter', 'AuthController', 'traiterRegister');
 $router->get( '/logout',           'AuthController', 'logout');
 
+// Dashboards
 $router->get('/citoyen/dashboard',  'DashboardController', 'citoyen');
 $router->get('/agent/dashboard',    'DashboardController', 'agent');
 $router->get('/admin/dashboard',    'DashboardController', 'admin');
 $router->get('/admin/utilisateurs', 'AdminController',     'utilisateurs');
 
+// Signalements
 $router->get( '/signalements',           'SignalementController', 'liste');
 $router->get( '/signalements/ajouter',   'SignalementController', 'ajouter');
 $router->post('/signalements/ajouter',   'SignalementController', 'traiterAjout');
@@ -39,6 +44,15 @@ $router->post('/signalements/modifier',  'SignalementController', 'traiterModifi
 $router->get( '/signalements/supprimer', 'SignalementController', 'supprimer');
 $router->post('/signalements/statut',    'SignalementController', 'changerStatut');
 
+// Commentaires
 $router->post('/commentaires/ajouter', 'CommentaireController', 'ajouter');
+
+// API REST JSON (lecture seule)
+$router->get('/api/signalements', 'ApiController', 'signalements');
+$router->get('/api/signalement',  'ApiController', 'signalement');
+$router->get('/api/stats',        'ApiController', 'stats');
+
+// Export CSV
+$router->get('/export/csv', 'ExportController', 'csv');
 
 $router->dispatch();

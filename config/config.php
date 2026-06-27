@@ -1,20 +1,20 @@
 <?php
-define('BASE_URL',    'http://localhost:8888/CityAlert/index.php');
+define('BASE_URL',    'http://localhost/CityAlert/index.php');
 define('BASE_PATH',   '/CityAlert/index.php');
 define('ROOT_PATH',   realpath(__DIR__ . '/..'));
 define('APP_PATH',    ROOT_PATH . '/app');
 define('VIEW_PATH',   APP_PATH  . '/views');
 define('DB_HOST',     '127.0.0.1');
-define('DB_PORT',     '8889');
+define('DB_PORT',     '3306');
 define('DB_NAME',     'cityalert');
 define('DB_USER',     'root');
-define('DB_PASS',     'root');
+define('DB_PASS',     '');
 define('DB_CHARSET',  'utf8');
 define('SESSION_NAME','cityalert_session');
 define('ROLE_CITOYEN','citoyen');
 define('ROLE_AGENT',  'agent');
 define('ROLE_ADMIN',  'admin');
 define('UPLOAD_PATH', ROOT_PATH . '/public/assets/images/uploads');
-define('UPLOAD_URL',  'http://localhost:8888/CityAlert/public/assets/images/uploads');
-define('ASSETS_URL', 'http://localhost:8888/CityAlert/public/assets');
+define('UPLOAD_URL',  'http://localhost/CityAlert/public/assets/images/uploads');
+define('ASSETS_URL', 'http://localhost/CityAlert/public/assets');
 define('MAX_FILE_SIZE', 2 * 1024 * 1024);
