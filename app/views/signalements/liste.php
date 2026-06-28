@@ -51,6 +51,7 @@
                         <th>Catégorie</th>
                         <th>Statut</th>
                         <th>Priorité</th>
+                        <th>Agent assigné</th>
                         <th>Date</th>
                         <th>Actions</th>
                     </tr>
@@ -81,6 +82,37 @@
                                     <?= ucfirst($sig['priorite']) ?>
                                 </span>
                             </td>
+
+                            <!-- Agent assigné -->
+                            <td style="font-size:.78rem">
+                                <?php if (!empty($sig['agent_nom'])): ?>
+                                    <div style="display:flex;align-items:center;gap:6px">
+                                        <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:700;flex-shrink:0">
+                                            <?= strtoupper(substr($sig['agent_prenom'] ?? '', 0, 1) . substr($sig['agent_nom'] ?? '', 0, 1)) ?>
+                                        </div>
+                                        <div>
+                                            <div style="font-weight:600;font-size:.8rem;color:var(--text)">
+                                                <?= htmlspecialchars($sig['agent_prenom'] . ' ' . $sig['agent_nom']) ?>
+                                            </div>
+                                            <div style="font-size:.7rem;color:var(--text-muted)">
+                                                <?php
+                                                    $agentEmail = $sig['agent_email'] ?? '';
+                                                    if (str_contains($agentEmail, 'voirie'))        echo '🛣️ Voirie';
+                                                    elseif (str_contains($agentEmail, 'eclairage')) echo '💡 Éclairage';
+                                                    elseif (str_contains($agentEmail, 'dechets'))   echo '🗑️ Déchets';
+                                                    elseif (str_contains($agentEmail, 'eau'))       echo '💧 Eau & Assainissement';
+                                                    else echo 'Agent';
+                                                ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php else: ?>
+                                    <span style="color:var(--text-muted);font-size:.75rem;font-style:italic">
+                                        ⏳ Non assigné
+                                    </span>
+                                <?php endif; ?>
+                            </td>
+
                             <td style="font-size:.78rem;color:var(--text-muted);white-space:nowrap">
                                 <?= date('d/m/Y', strtotime($sig['created_at'])) ?>
                             </td>
@@ -91,9 +123,9 @@
                                         Voir
                                     </a>
                                     <?php if ($sig['statut'] === 'nouveau' && (int)$sig['user_id'] === (int)$_SESSION['user']['id']): ?>
-                                        <a href="<?= BASE_URL ?>/signalements/modifier?id=<?= $sig['id'] ?>" class="btn btn-sm btn-warning">Modifier</a>
+                                        <a href="<?= BASE_URL ?>/signalements/modifier?id=<?= $sig['id'] ?>" class="btn btn-sm btn-warning">✏️</a>
                                         <a href="<?= BASE_URL ?>/signalements/supprimer?id=<?= $sig['id'] ?>" class="btn btn-sm btn-danger"
-                                           onclick="return confirm('Supprimer ce signalement ?')">Supprimer</a>
+                                           onclick="return confirm('Supprimer ce signalement ?')">🗑️</a>
                                     <?php endif; ?>
                                 </div>
                             </td>

@@ -1,11 +1,18 @@
 <nav class="navbar">
     <div class="navbar-brand">
-        <a href="<?= BASE_URL ?>">
-            <div class="brand-icon">🚨</div>
-            CityAlert
+        <a href="<?= BASE_URL ?>/<?= isset($_SESSION['user']) ?
+            ($_SESSION['user']['role'] === ROLE_ADMIN ? 'admin/dashboard' :
+            ($_SESSION['user']['role'] === ROLE_AGENT ? 'agent/dashboard' : 'citoyen/dashboard'))
+            : 'login' ?>"
+           style="display:flex;align-items:center;gap:10px;text-decoration:none">
+            <img src="/CityAlert/public/assets/images/LOGO.jpeg"
+                 alt="CityAlert Logo"
+                 style="width:40px;height:40px;object-fit:contain">
+            <span style="font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--primary)">
+                City<span style="color:var(--accent)">Alert</span>
+            </span>
         </a>
     </div>
-
     <ul class="navbar-menu">
         <?php if (isset($_SESSION['user'])): ?>
             <?php if ($_SESSION['user']['role'] === ROLE_CITOYEN): ?>

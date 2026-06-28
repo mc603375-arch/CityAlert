@@ -75,5 +75,19 @@ INSERT IGNORE INTO users (nom, prenom, email, password, role) VALUES
 
 -- Colonnes lat/lng pour la carte
 ALTER TABLE signalements
-    ADD COLUMN IF NOT EXISTS lat DECIMAL(10,7) NULL,
-    ADD COLUMN IF NOT EXISTS lng DECIMAL(10,7) NULL;
+ADD COLUMN lat DECIMAL(10, 8) DEFAULT NULL,
+ADD COLUMN lng DECIMAL(11, 8) DEFAULT NULL;
+
+-- Ajout des 4 agents
+INSERT INTO users (nom, prenom, email, password, role) VALUES
+('Diallo',  'Ibrahima', 'agent.voirie@cityalert.com',
+'$2y$10$DhNF4JKAmnx2rlSagxe.vOW1eJaCX5j9Nndy3szRtWRfSJlvYuu6K', 'agent'),
+
+('Ndiaye',  'Moussa', 'agent.eclairage@cityalert.com',
+'$2y$10$DhNF4JKAmnx2rlSagxe.vOW1eJaCX5j9Nndy3szRtWRfSJlvYuu6K', 'agent'),
+
+('Sarr',    'Fatou', 'agent.dechets@cityalert.com',
+'$2y$10$DhNF4JKAmnx2rlSagxe.vOW1eJaCX5j9Nndy3szRtWRfSJlvYuu6K', 'agent'),
+
+('Ba',      'Aminata', 'agent.eau@cityalert.com',
+'$2y$10$DhNF4JKAmnx2rlSagxe.vOW1eJaCX5j9Nndy3szRtWRfSJlvYuu6K', 'agent');

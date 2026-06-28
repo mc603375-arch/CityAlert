@@ -3,47 +3,59 @@
 <?php require_once VIEW_PATH . '/layout/navbar.php'; ?>
 
 <div class="container">
-    <div class="page-header">
-        <h1>Dashboard <span class="hi">Admin</span></h1>
-        <div style="display:flex;gap:.75rem">
-            <a href="<?= BASE_URL ?>/export/csv" class="btn btn-outline btn-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
-                Export CSV
-            </a>
-            <a href="<?= BASE_URL ?>/signalements" class="btn btn-primary btn-sm">Voir tous les signalements</a>
-        </div>
-    </div>
+ <div class="page-header">
+     <h1>Dashboard <span class="hi">Admin</span></h1>
+     <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+         <a href="<?= BASE_URL ?>/admin/agents" class="btn btn-outline btn-sm">
+             👮 Gérer les agents
+         </a>
+         <a href="<?= BASE_URL ?>/admin/citoyens" class="btn btn-outline btn-sm">
+             👥 Gérer les citoyens
+         </a>
+         <a href="<?= BASE_URL ?>/export/csv" class="btn btn-outline btn-sm">
+             ⬇️ Export CSV
+         </a>
+         <a href="<?= BASE_URL ?>/signalements" class="btn btn-primary btn-sm">
+             Voir tous les signalements
+         </a>
+     </div>
+ </div>
 
-    <!-- Stats cards -->
+    <!-- Stats cards cliquables -->
     <div class="stats-grid">
-        <div class="stat-card">
+
+        <a href="<?= BASE_URL ?>/admin/utilisateurs" class="stat-card" style="text-decoration:none;cursor:pointer">
             <div class="stat-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/></svg>
             </div>
             <div class="stat-value"><?= $totalUsers ?? 0 ?></div>
             <div class="stat-label">Utilisateurs inscrits</div>
-        </div>
-        <div class="stat-card stat-orange">
+        </a>
+
+        <a href="<?= BASE_URL ?>/signalements" class="stat-card stat-orange" style="text-decoration:none;cursor:pointer">
             <div class="stat-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
             </div>
             <div class="stat-value"><?= $totalSignalements ?? 0 ?></div>
             <div class="stat-label">Signalements total</div>
-        </div>
-        <div class="stat-card stat-red">
+        </a>
+
+        <a href="<?= BASE_URL ?>/signalements?statut=nouveau" class="stat-card stat-red" style="text-decoration:none;cursor:pointer">
             <div class="stat-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
             </div>
             <div class="stat-value"><?= $nouveaux ?? 0 ?></div>
             <div class="stat-label">En attente de traitement</div>
-        </div>
-        <div class="stat-card stat-green">
+        </a>
+
+        <a href="<?= BASE_URL ?>/signalements?statut=resolu" class="stat-card stat-green" style="text-decoration:none;cursor:pointer">
             <div class="stat-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
             </div>
             <div class="stat-value"><?= $resolus ?? 0 ?></div>
             <div class="stat-label">Signalements résolus</div>
-        </div>
+        </a>
+
     </div>
 
     <!-- Graphiques -->
@@ -85,7 +97,13 @@
         </div>
         <div class="card-body" style="padding:0">
             <table class="table">
-                <thead><tr><th>Catégorie</th><th>Signalements</th><th>Part</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Catégorie</th>
+                        <th>Signalements</th>
+                        <th>Part</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <?php
                     $totalSig = array_sum(array_column($parCategorie, 'total')) ?: 1;
@@ -110,10 +128,12 @@
         </div>
     </div>
     <?php endif; ?>
+
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+
     // Graphique statuts
     const ctxS = document.getElementById('chartStatut').getContext('2d');
     new Chart(ctxS, {
@@ -163,18 +183,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Carte Leaflet admin
     const map = L.map('map').setView([14.6928, -17.4467], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-    // Charger les signalements via l'API JSON
     fetch('<?= BASE_URL ?>/api/signalements')
         .then(r => r.json())
         .then(data => {
             if (!data.data) return;
             data.data.forEach(sig => {
                 if (!sig.lat || !sig.lng) return;
-                const colors = { nouveau:'#1a56db', en_cours:'#e85d04', resolu:'#057a55', rejete:'#c81e1e' };
-                const color  = colors[sig.statut] || '#64748b';
-                const icon   = L.divIcon({
+                const colors = {
+                    nouveau:  '#1a56db',
+                    en_cours: '#e85d04',
+                    resolu:   '#057a55',
+                    rejete:   '#c81e1e'
+                };
+                const color = colors[sig.statut] || '#64748b';
+                const icon  = L.divIcon({
                     className: '',
                     html: `<div style="width:14px;height:14px;background:${color};border:2px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`,
                     iconSize: [14,14], iconAnchor: [7,7]

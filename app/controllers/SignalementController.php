@@ -50,12 +50,20 @@ class SignalementController
         $historique   = $this->repo->getHistorique($id);
         $commentaires = (new CommentaireRepository())->findBySignalement($id);
         $db           = Database::getInstance()->getConnexion();
-        $stmtCat      = $db->prepare("SELECT * FROM categories WHERE id=:id");
+
+        $stmtCat = $db->prepare("SELECT * FROM categories WHERE id=:id");
         $stmtCat->execute([':id' => $signalement['categorie_id']]);
-        $categorie    = Categorie::fromArray($stmtCat->fetch());
+        $categorie = Categorie::fromArray($stmtCat->fetch());
+
+        // Récupère les agents pour l'assignation (admin seulement)
+        $agents = $db->query(
+            "SELECT id, nom, prenom FROM users WHERE role = 'agent' ORDER BY nom"
+        )->fetchAll();
+
         $erreur  = $_SESSION['erreur']  ?? null;
         $success = $_SESSION['success'] ?? null;
         unset($_SESSION['erreur'], $_SESSION['success']);
+
         require VIEW_PATH . '/signalements/detail.php';
     }
 
@@ -103,7 +111,7 @@ class SignalementController
         ]);
 
         $_SESSION[$ok ? 'success' : 'erreur'] = $ok
-            ? $categorie->getMessageCreation()
+            ? "Signalement créé avec succès !"
             : "Erreur lors de la création.";
         header('Location: ' . BASE_URL . ($ok ? '/signalements' : '/signalements/ajouter'));
         exit;
@@ -135,8 +143,11 @@ class SignalementController
             header('Location: ' . BASE_URL . '/signalements/modifier?id=' . $id); exit;
         }
 
-        $photo = !empty($_FILES['photo']['name']) ? $this->gererUpload() : ($signalement['photo'] ?? null);
-        $ok    = $this->repo->save([
+        $photo = !empty($_FILES['photo']['name'])
+            ? $this->gererUpload()
+            : ($signalement['photo'] ?? null);
+
+        $ok = $this->repo->save([
             'id'           => $id,
             'titre'        => htmlspecialchars(trim($_POST['titre'])),
             'description'  => htmlspecialchars(trim($_POST['description'])),
@@ -151,8 +162,11 @@ class SignalementController
             'lng'          => $signalement['lng'],
         ]);
 
-        $_SESSION[$ok ? 'success' : 'erreur'] = $ok ? "Signalement mis à jour." : "Erreur.";
-        header('Location: ' . BASE_URL . '/signalements/detail?id=' . $id); exit;
+        $_SESSION[$ok ? 'success' : 'erreur'] = $ok
+            ? "Signalement mis à jour."
+            : "Erreur lors de la mise à jour.";
+        header('Location: ' . BASE_URL . '/signalements/detail?id=' . $id);
+        exit;
     }
 
     public function supprimer(): void
@@ -186,25 +200,69 @@ class SignalementController
             header('Location: ' . BASE_URL . '/signalements/detail?id=' . $id); exit;
         }
 
-        // Récupère le signalement avant changement (pour notif email)
-        $signalement = $this->repo->findById($id);
+        $signalement  = $this->repo->findById($id);
         $ancienStatut = $signalement['statut'];
 
         $this->repo->changerStatut($id, $statut, $com, (int)$_SESSION['user']['id']);
 
         // Notification email au citoyen
         $db   = Database::getInstance()->getConnexion();
-        $stmt = $db->prepare("SELECT u.email FROM users u JOIN signalements s ON s.user_id = u.id WHERE s.id = :id");
+        $stmt = $db->prepare(
+            "SELECT u.email FROM users u
+             JOIN signalements s ON s.user_id = u.id
+             WHERE s.id = :id"
+        );
         $stmt->execute([':id' => $id]);
         $email = $stmt->fetchColumn();
         if ($email) {
-            DashboardController::envoyerNotification($email, $signalement['titre'], $ancienStatut, $statut);
+            DashboardController::envoyerNotification(
+                $email,
+                $signalement['titre'],
+                $ancienStatut,
+                $statut
+            );
         }
 
         $_SESSION['success'] = "Statut mis à jour.";
-        header('Location: ' . BASE_URL . '/signalements/detail?id=' . $id); exit;
+        header('Location: ' . BASE_URL . '/signalements/detail?id=' . $id);
+        exit;
     }
 
+    // -------------------------------------------------------
+    // ASSIGNER UN AGENT (admin seulement)
+    // -------------------------------------------------------
+    public function assigner(): void
+    {
+        $this->requireAuth();
+        if ($_SESSION['user']['role'] !== ROLE_ADMIN) {
+            header('Location: ' . BASE_URL . '/signalements'); exit;
+        }
+
+        $id      = (int)($_POST['id']       ?? 0);
+        $agentId = (int)($_POST['agent_id'] ?? 0);
+
+        if ($id === 0 || $agentId === 0) {
+            $_SESSION['erreur'] = "Données invalides.";
+            header('Location: ' . BASE_URL . '/signalements/detail?id=' . $id); exit;
+        }
+
+        $db   = Database::getInstance()->getConnexion();
+        $stmt = $db->prepare(
+            "UPDATE signalements SET agent_id = :agent_id, statut = 'en_cours' WHERE id = :id"
+        );
+        $ok = $stmt->execute([':agent_id' => $agentId, ':id' => $id]);
+
+        $_SESSION[$ok ? 'success' : 'erreur'] = $ok
+            ? "Agent assigné et signalement passé en cours."
+            : "Erreur lors de l'assignation.";
+
+        header('Location: ' . BASE_URL . '/signalements/detail?id=' . $id);
+        exit;
+    }
+
+    // -------------------------------------------------------
+    // MÉTHODES PRIVÉES
+    // -------------------------------------------------------
     private function valider(array $d): array
     {
         $e = [];
@@ -230,19 +288,26 @@ class SignalementController
         $allowed = ['image/jpeg', 'image/png', 'image/webp'];
         $mime    = mime_content_type($_FILES['photo']['tmp_name']);
         if (!in_array($mime, $allowed, true)) {
-            $_SESSION['erreur'] = "Format non autorisé (jpg, png, webp)."; return null;
+            $_SESSION['erreur'] = "Format non autorisé (jpg, png, webp).";
+            return null;
         }
         if ($_FILES['photo']['size'] > MAX_FILE_SIZE) {
-            $_SESSION['erreur'] = "Photo trop lourde (max 2 Mo)."; return null;
+            $_SESSION['erreur'] = "Photo trop lourde (max 2 Mo).";
+            return null;
         }
 
         $ext  = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
         $name = 'sig_' . uniqid('', true) . '.' . strtolower($ext);
         $dest = UPLOAD_PATH . '/' . $name;
+
+        if (!is_dir(UPLOAD_PATH)) {
+            mkdir(UPLOAD_PATH, 0755, true);
+        }
+
         move_uploaded_file($_FILES['photo']['tmp_name'], $dest);
 
-        // Redimensionnement si GD disponible
-        if (function_exists('imagecreatefromjpeg') && in_array($mime, ['image/jpeg','image/png','image/webp'])) {
+        if (function_exists('imagecreatefromjpeg') &&
+            in_array($mime, ['image/jpeg','image/png','image/webp'])) {
             $this->redimensionner($dest, $mime, 1200);
         }
 
@@ -254,8 +319,8 @@ class SignalementController
         [$w, $h] = getimagesize($path);
         if ($w <= $maxW) return;
 
-        $ratio  = $maxW / $w;
-        $newH   = (int)($h * $ratio);
+        $ratio = $maxW / $w;
+        $newH  = (int)($h * $ratio);
 
         $src = match($mime) {
             'image/png'  => imagecreatefrompng($path),
