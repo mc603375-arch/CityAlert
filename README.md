@@ -114,7 +114,7 @@ http://localhost/CityAlert/index.php/login
 | **Agent Éclairage** | agent.eclairage@cityalert.com | agent123 |
 | **Agent Déchets** | agent.dechets@cityalert.com | agent123 |
 | **Agent Eau** | agent.eau@cityalert.com | agent123 |
-| **Citoyen** | mc60375@gmail.com | *(votre mot de passe)* |
+| **Citoyen** | mc60375@gmail.com | 123456|
 
 > Pour créer un compte citoyen : cliquer sur **"S'inscrire gratuitement"** sur la page de connexion.
 
